@@ -7,6 +7,19 @@
     >
       <a-alert :message="message"> </a-alert>
     </a-spin>
+
+    <div style="width: 100%">
+      <h6>MODEL:</h6>
+      <json-editor
+        v-model="jsonView"
+        :show-btns="true"
+        :expandedOnStart="true"
+        @json-change="onJsonChange"
+        @json-save="jsonSave"
+        @has-error="errorJsoin"
+      />
+    </div>
+
     <a-alert
       v-if="isError"
       message="NCALayer не найден!!!!!!!!!!!!"
@@ -15,50 +28,27 @@
     >
       <template #icon><smile-outlined /></template>
     </a-alert>
-    <!-- <div style="width: 100%">
-      <h6>MODEL:</h6>
-      <json-editor
-        v-model="jsonView"
-        :show-btns="true"
-        :expandedOnStart="true"
-        @json-change="onJsonChange"
-        @json-save="jsonSave"
-        @has-error="errorJsonb"
-      />
-    </div> -->
-
-    <!-- <div class="width-100p">
-      <a-textarea
+    <div class="width-100p">
+      <!-- <a-textarea
         v-model:value="xmlString"
         placeholder="Basic usage"
         :rows="4"
-      />
+      /> -->
       <a-button @click="localSave">
         Сохранить данный json в local storage</a-button
       >
       <a-button @click="podpisat"> Подписать</a-button>
-    </div> -->
-    <div>
-      <a-typography-title>Введите XML</a-typography-title>
-      <a-textarea
-        v-model:value="xmlString"
-        placeholder="Введите XML"
-        :rows="4"
-      />
-      <a-button @click="podpisat"> Подписать</a-button>
-      <!-- <json-viewer :value="jsonView" /> -->
     </div>
-    <div>
-      <a-alert
-        v-if="isErrorNc"
-        :message="messageError"
-        type="error"
-        show-icon
-      />
 
-      <a-typography-title>Подписанный документ:</a-typography-title>
-
-      <!-- <json-viewer :value="nclayerMess" /> -->
+    <div class="d-flexx">
+      <div>
+        <a-typography-title>Отправляете в NCALayer</a-typography-title>
+        <json-viewer :value="jsonView" />
+      </div>
+      <div>
+        <a-typography-title>Ответ от NCALayer</a-typography-title>
+        <json-viewer :value="nclayerMess" />
+      </div>
     </div>
   </div>
 </template>
@@ -73,10 +63,8 @@ export default {
       xmlString: "",
       isError: false,
       isLoad: true,
-      messageError: "Ошибка подписи",
-      message: "NCALayer загружен....",
+      message: "Веб-сокет -NCALayer загружен....",
       nclayerMess: "",
-      isErrorNc: false,
       socket: {},
       jsonView: {},
     };
@@ -90,21 +78,12 @@ export default {
       this.jsonView = { ...e };
       console.log(e);
     },
-    errorJsonb(e) {
-      console.log(e);
-    },
     localSave() {
       localStorage.removeItem("json");
       localStorage.setItem("json", JSON.stringify(this.jsonView));
     },
     podpisat() {
-      this.socket.send(
-        JSON.stringify({
-          module: "kz.gov.pki.knca.commonUtils",
-          method: "signXml",
-          args: ["PKCS12", "SIGNATURE", this.xmlString, "", ""],
-        })
-      );
+      this.socket.send(JSON.stringify(this.jsonView));
     },
     components: {
       JsonViewer,
@@ -127,13 +106,7 @@ export default {
         JSON.stringify({
           module: "kz.gov.pki.knca.commonUtils",
           method: "signXml",
-          args: [
-            "PKCS12",
-            "SIGNATURE",
-            '<?xml version="1.0" encoding="UTF-8"?><doc><contents><![CDATA[<div class="text-right">\n  <p><em>Приложение к Приказу АО «Транстелеком»</em></p>\n  <p><em>от 18.06.2019 года № TTC/39-ВП </em></p>\n</div>\n<p></p>\n\n<p></p>\n\n]]></contents></doc>',
-            "",
-            "",
-          ],
+          args: ["PKCS12", "SIGNATURE", this.xmlString, "", ""],
         })
       );
     }
@@ -145,12 +118,7 @@ export default {
       this.isLoad = false;
     };
     this.socket.onmessage = (event) => {
-      // this.nclayerMess = JSON.parse(event.data);
-      let data = JSON.parse(event.data);
-
-      if (data.status == 200) {
-        this.isErrorNc = false;
-      }
+      this.nclayerMess = JSON.parse(event.data);
     };
   },
 };
@@ -163,9 +131,6 @@ export default {
 .flex {
   display: flex;
   gap: 10px;
-}
-.grid div {
-  width: 100%;
 }
 .grid {
   width: 100%;
@@ -181,7 +146,5 @@ export default {
 .d-flexx {
   display: flex;
   gap: 20px;
-  width: 100%;
-  justify-content: space-between;
 }
 </style>
