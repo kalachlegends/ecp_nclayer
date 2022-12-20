@@ -57,7 +57,9 @@
       />
 
       <a-typography-title>Подписанный документ:</a-typography-title>
-
+      <div>
+        {{ resultXmlString }}
+      </div>
       <!-- <json-viewer :value="nclayerMess" /> -->
     </div>
   </div>
@@ -71,6 +73,7 @@ export default {
   data() {
     return {
       xmlString: "",
+      resultXmlString: "",
       isError: false,
       isLoad: true,
       messageError: "Ошибка подписи",
@@ -147,9 +150,16 @@ export default {
     this.socket.onmessage = (event) => {
       // this.nclayerMess = JSON.parse(event.data);
       let data = JSON.parse(event.data);
-
-      if (data.status == 200) {
+      console.log(data);
+      this.messageError = "Ошибка подписи";
+      if (data.code == 200) {
         this.isErrorNc = false;
+        this.xmlString = data.responseObject;
+      }
+      if (data.code == 500) {
+        this.isErrorNc = true;
+
+        this.messageError = this.messageError + ` - \n${data.message}`;
       }
     };
   },
