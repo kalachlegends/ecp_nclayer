@@ -44,8 +44,11 @@
         v-model:value="xmlString"
         placeholder="Введите XML"
         :rows="4"
+        style="height: 400px"
       />
-      <a-button @click="podpisat"> Подписать</a-button>
+      <a-button type="primary" @click="podpisat" class="mt-10">
+        Подписать</a-button
+      >
       <!-- <json-viewer :value="jsonView" /> -->
     </div>
     <div>
@@ -55,8 +58,12 @@
         type="error"
         show-icon
       />
+      <a-alert v-if="alert" :message="alert" type="success" />
+      <a-typography-title class="typographic"
+        >Подписанный документ:
 
-      <a-typography-title>Подписанный документ:</a-typography-title>
+        <a-button @click="copy" type="primary">Скопировать</a-button>
+      </a-typography-title>
       <div>
         {{ resultXmlString }}
       </div>
@@ -82,12 +89,23 @@ export default {
       isErrorNc: false,
       socket: {},
       jsonView: {},
+      alert: "",
     };
   },
   methods: {
     onJsonChange(e) {
       this.jsonView = { ...e };
       console.log(e);
+    },
+
+    copy() {
+      const timeout = setTimeout(() => {
+        this.alert = "";
+        clearTimeout(timeout);
+      }, 1000);
+      this.alert = "Скопировано!";
+
+      navigator.clipboard.writeText(this.resultXmlString);
     },
     jsonSave(e) {
       this.jsonView = { ...e };
@@ -154,7 +172,7 @@ export default {
       this.messageError = "Ошибка подписи";
       if (data.code == 200) {
         this.isErrorNc = false;
-        this.xmlString = data.responseObject;
+        this.resultXmlString = data.responseObject;
       }
       if (data.code == 500) {
         this.isErrorNc = true;
@@ -177,6 +195,9 @@ export default {
 .grid div {
   width: 100%;
 }
+.mt-10 {
+  margin-top: 10px;
+}
 .grid {
   width: 100%;
   display: flex;
@@ -187,6 +208,12 @@ export default {
 }
 .width-100p {
   width: 100%;
+}
+.typographic {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
 }
 .d-flexx {
   display: flex;
